@@ -79,10 +79,10 @@ export const WeatherDisplay = ({
   return (
     <div className="space-y-6">
       {/* Location Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
         <div className="flex items-center gap-2 mb-2">
-          <MapPin className="h-6 w-6 text-white/80" />
-          <h2 className="text-2xl font-bold">
+          <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-white/80" />
+          <h2 className="text-xl sm:text-2xl font-bold truncate">
             {weatherData.location?.name || "Current Location"}
             {weatherData.location?.country && `, ${weatherData.location.country}`}
           </h2>
@@ -94,22 +94,22 @@ export const WeatherDisplay = ({
       </div>
       
       {/* Weather Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {weatherData.daily.time.map((date: string, index: number) => (
           <Card key={date} className="flex flex-col overflow-hidden border-t-4 border-blue-500 hover:shadow-lg transition-all hover:translate-y-[-2px]">
-            <CardHeader className="pb-2 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent">
-              <CardTitle className="text-lg font-medium">
+            <CardHeader className="pb-2 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent px-3 sm:px-6">
+              <CardTitle className="text-base sm:text-lg font-medium">
                 {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
               </CardTitle>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </p>
             </CardHeader>
-            <CardContent className="flex-1 pt-0">
-              <div className="flex justify-center mb-4 mt-2">
+            <CardContent className="flex-1 pt-0 px-3 sm:px-6">
+              <div className="flex justify-center mb-3 mt-2">
                 {getWeatherIcon(weatherData.daily.weathercode?.[index])}
               </div>
-              <div className="flex items-center justify-between text-sm mb-3">
+              <div className="flex items-center justify-between text-sm mb-2">
                 <div className="flex items-center">
                   <ThermometerSun className="h-4 w-4 mr-1 text-red-500" />
                   <span className="font-medium text-red-500">
@@ -123,7 +123,7 @@ export const WeatherDisplay = ({
                   </span>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-gray-600 dark:text-gray-400 space-y-2 border-t pt-2">
+              <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 space-y-1 border-t pt-2">
                 <div className="flex items-center">
                   <Wind className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
                   <span>{weatherData.daily.windspeed_10m_max[index]} km/h</span>
@@ -143,10 +143,10 @@ export const WeatherDisplay = ({
 
 const SkeletonLoader = () => (
   <div className="space-y-6">
-    <Skeleton className="h-[120px] w-full rounded-xl" />
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+    <Skeleton className="h-[100px] sm:h-[120px] w-full rounded-xl" />
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
       {[...Array(7)].map((_, i) => (
-        <Skeleton key={i} className="h-[220px] w-full rounded-lg" />
+        <Skeleton key={i} className="h-[180px] sm:h-[220px] w-full rounded-lg" />
       ))}
     </div>
   </div>

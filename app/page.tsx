@@ -184,10 +184,10 @@ export default function WeatherPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 pb-10">
       <div className="container mx-auto px-4 py-8">
-        <header className="flex justify-between items-center mb-8 border-b pb-4">
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
           <div className="flex items-center gap-3">
             <Globe className="h-8 w-8 text-blue-500" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Weather Forecast</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Weather Forecast</h1>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -210,22 +210,24 @@ export default function WeatherPage() {
           onValueChange={(value) => setActiveLocation(value)}
           className="space-y-6"
         >
-          <TabsList className="bg-card border p-1 rounded-full flex-wrap justify-start">
-            <TabsTrigger value="current" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Compass className="h-4 w-4 mr-2" />
-              Current Location
-            </TabsTrigger>
-            {locations.map((loc) => (
-              <TabsTrigger 
-                key={loc.id} 
-                value={loc.id} 
-                className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                {loc.name}
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="bg-card border p-1 rounded-full flex-nowrap justify-start min-w-max">
+              <TabsTrigger value="current" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <Compass className="h-4 w-4 mr-2" />
+                Current Location
               </TabsTrigger>
-            ))}
-          </TabsList>
+              {locations.map((loc) => (
+                <TabsTrigger 
+                  key={loc.id} 
+                  value={loc.id} 
+                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  {loc.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           <TabsContent value="current" className="mt-6">
             {geoLoading || isLoading ? (
