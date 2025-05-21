@@ -44,7 +44,6 @@ export default function WeatherPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [activeLocation, setActiveLocation] = useState<string>("current");
   const [locationWeather, setLocationWeather] = useState<{[key: string]: WeatherData | null}>({});
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -174,8 +173,7 @@ export default function WeatherPage() {
       setActiveLocation("current");
     }
     
-    // Reset the delete confirmation state
-    setShowDeleteConfirm(null);
+    
     
     toast.success("Location removed successfully");
     
@@ -311,48 +309,20 @@ export default function WeatherPage() {
                     <TabsTrigger 
                       key={loc.id} 
                       value={loc.id} 
-                      className="rounded-full px-4 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 group relative font-medium"
+                      className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all relative pr-8"
                     >
                       <MapPin className="h-4 w-4 mr-2" />
                       {loc.name}
-                      
-                      {/* Delete button with confirmation */}
-                      <div className="relative">
-                        {showDeleteConfirm === loc.id ? (
-                          <div className="absolute -right-4 -top-1 flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg p-1 z-10 animate-fadeIn transition-all duration-200">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteLocation(loc.id);
-                              }}
-                              className="p-1 hover:bg-red-100 dark:hover:bg-red-800/30 rounded-full transition-colors duration-200"
-                              aria-label={`Confirm delete ${loc.name}`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDeleteConfirm(null);
-                              }}
-                              className="ml-1 p-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors duration-200"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowDeleteConfirm(loc.id);
-                            }}
-                            className="ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
-                            aria-label={`Delete ${loc.name}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors duration-200" />
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent tab switching when clicking delete
+                          handleDeleteLocation(loc.id);
+                        }}
+                        className="absolute right-2 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
+                        aria-label={`Delete ${loc.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      </button>
                     </TabsTrigger>
                   ))}
                 </TabsList>
