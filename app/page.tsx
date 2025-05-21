@@ -1,3 +1,4 @@
+
 "use client";
 import { useGeolocation } from '../components/hooks/useGeolocation';
 import { fetchWeather } from '@/lib/api';
@@ -8,9 +9,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { MapPin, RefreshCw, Compass, Globe, Github, Linkedin } from 'lucide-react';
+import { MapPin, RefreshCw, Compass, Globe, Github, Linkedin, Trash2, CloudSun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Define proper types for weather data and locations
 interface WeatherData {
@@ -20,6 +22,10 @@ interface WeatherData {
     temperature_2m_min: number[];
     windspeed_10m_max: number[];
     precipitation_sum: number[];
+  };
+  location?: {
+    name: string;
+    country?: string;
   };
   // Add other properties as needed
 }
@@ -38,6 +44,7 @@ export default function WeatherPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [activeLocation, setActiveLocation] = useState<string>("current");
   const [locationWeather, setLocationWeather] = useState<{[key: string]: WeatherData | null}>({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -129,6 +136,53 @@ export default function WeatherPage() {
     const updatedLocations = [...locations, newLocation];
     setLocations(updatedLocations);
     // localStorage will be updated by the effect above
+    
+    // Fetch weather for the new location immediately
+    const fetchNewLocationWeather = async () => {
+      try {
+        const data = await fetchWeather(newLocation.latitude, newLocation.longitude);
+        data.location = { name: newLocation.name };
+        
+        setLocationWeather(prev => ({
+          ...prev,
+          [newLocation.id]: data
+        }));
+        
+        // Automatically switch to the new location
+        setActiveLocation(newLocation.id);
+      } catch (error) {
+        console.error(`Failed to fetch weather for ${newLocation.name}`, error);
+      }
+    };
+    
+    fetchNewLocationWeather();
+  };
+
+  // Handle location deletion
+  const handleDeleteLocation = (locationId: string) => {
+    // Filter out the location with the given ID
+    const updatedLocations = locations.filter(loc => loc.id !== locationId);
+    setLocations(updatedLocations);
+    
+    // Also remove the weather data for this location
+    const updatedWeatherData = { ...locationWeather };
+    delete updatedWeatherData[locationId];
+    setLocationWeather(updatedWeatherData);
+    
+    // If the deleted location was active, switch to current location
+    if (activeLocation === locationId) {
+      setActiveLocation("current");
+    }
+    
+    // Reset the delete confirmation state
+    setShowDeleteConfirm(null);
+    
+    toast.success("Location removed successfully");
+    
+    // If there are no more locations, clear localStorage
+    if (updatedLocations.length === 0) {
+      localStorage.removeItem('weatherLocations');
+    }
   };
 
   // Also update the refresh function
@@ -183,30 +237,57 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-slate-950 dark:to-slate-900 flex flex-col">
-      <div className="container mx-auto px-4 py-6 flex-grow">
-        <Card className="shadow-lg rounded-2xl overflow-hidden border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm mb-8">
-          <header className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white dark:from-slate-950 dark:via-blue-950/30 dark:to-slate-900 flex flex-col">
+      <div className="container mx-auto px-4 py-8 flex-grow">
+        <Card className="shadow-xl rounded-3xl overflow-hidden border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md mb-8">
+          <header className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-white to-blue-50/50 dark:from-slate-900 dark:to-blue-950/30">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 dark:bg-blue-500 p-2 rounded-full">
-                <Globe className="h-7 w-7 text-white" />
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 p-2.5 rounded-full shadow-md">
+                <CloudSun className="h-7 w-7 text-white" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 Weather Forecast
               </h1>
             </div>
-            <div className="flex items-center gap-3 mt-4 sm:mt-0">
-              <ThemeToggle />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleRefresh}
-                className="rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                aria-label="Refresh weather data"
-              >
-                <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </Button>
-              <AddLocationDialog onAdd={handleAddLocation} />
+            <div className="flex items-center gap-4 mt-4 sm:mt-0">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ThemeToggle />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Toggle theme</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handleRefresh}
+                      className="rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 border-slate-200 dark:border-slate-700"
+                      aria-label="Refresh weather data"
+                    >
+                      <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh weather data</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <AddLocationDialog onAdd={handleAddLocation} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Add new location</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </header>
 
@@ -217,11 +298,11 @@ export default function WeatherPage() {
               onValueChange={(value) => setActiveLocation(value)}
               className="space-y-6"
             >
-              <div className="overflow-x-auto pb-2">
-                <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full flex-nowrap justify-start min-w-max">
+              <div className="overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-blue-200 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <TabsList className="bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-full flex-nowrap justify-start min-w-max shadow-inner">
                   <TabsTrigger 
                     value="current" 
-                    className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
                   >
                     <Compass className="h-4 w-4 mr-2" />
                     Current Location
@@ -230,20 +311,61 @@ export default function WeatherPage() {
                     <TabsTrigger 
                       key={loc.id} 
                       value={loc.id} 
-                      className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                      className="rounded-full px-4 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 group relative font-medium"
                     >
                       <MapPin className="h-4 w-4 mr-2" />
                       {loc.name}
+                      
+                      {/* Delete button with confirmation */}
+                      <div className="relative">
+                        {showDeleteConfirm === loc.id ? (
+                          <div className="absolute -right-4 -top-1 flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg p-1 z-10 animate-fadeIn transition-all duration-200">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLocation(loc.id);
+                              }}
+                              className="p-1 hover:bg-red-100 dark:hover:bg-red-800/30 rounded-full transition-colors duration-200"
+                              aria-label={`Confirm delete ${loc.name}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDeleteConfirm(null);
+                              }}
+                              className="ml-1 p-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors duration-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDeleteConfirm(loc.id);
+                            }}
+                            className="ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
+                            aria-label={`Delete ${loc.name}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors duration-200" />
+                          </button>
+                        )}
+                      </div>
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </div>
 
-              <TabsContent value="current" className="mt-6">
+              <TabsContent value="current" className="mt-6 animate-fadeIn">
                 {geoLoading || isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-16">
-                    <RefreshCw className="h-12 w-12 animate-spin text-blue-500 mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">Loading weather data...</p>
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="relative">
+                      <RefreshCw className="h-12 w-12 animate-spin text-blue-500 opacity-30" />
+                      <RefreshCw className="h-12 w-12 animate-spin text-blue-500 absolute top-0 left-0 animate-ping opacity-20" />
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 mt-4 font-medium">Loading weather data...</p>
                   </div>
                 ) : (
                   <WeatherDisplay weatherData={weatherData} isLoading={isLoading} />
@@ -251,11 +373,14 @@ export default function WeatherPage() {
               </TabsContent>
 
               {locations.map((loc) => (
-                <TabsContent key={loc.id} value={loc.id} className="mt-6">
+                <TabsContent key={loc.id} value={loc.id} className="mt-6 animate-fadeIn">
                   {!locationWeather[loc.id] ? (
-                    <div className="flex flex-col items-center justify-center py-16">
-                      <RefreshCw className="h-12 w-12 animate-spin text-blue-500 mb-4" />
-                      <p className="text-slate-600 dark:text-slate-400">Loading weather data for {loc.name}...</p>
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <div className="relative">
+                        <RefreshCw className="h-12 w-12 animate-spin text-blue-500 opacity-30" />
+                        <RefreshCw className="h-12 w-12 animate-spin text-blue-500 absolute top-0 left-0 animate-ping opacity-20" />
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-400 mt-4 font-medium">Loading weather data for {loc.name}...</p>
                     </div>
                   ) : (
                     <WeatherDisplay weatherData={locationWeather[loc.id]} isLoading={false} />
@@ -268,7 +393,7 @@ export default function WeatherPage() {
       </div>
       
       {/* Footer with your name and profile */}
-      <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-auto">
+      <footer className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 py-6 mt-auto">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="mb-4 sm:mb-0">
@@ -276,36 +401,66 @@ export default function WeatherPage() {
                 © {new Date().getFullYear()} Designed & Developed by Abdul Musawer Dinzad
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5">
               <a 
                 href="https://musawer-cv.vercel.app/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-2"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-2 group"
               >
-                <Globe className="h-4 w-4" />
-                <span>Portfolio</span>
+                <Globe className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span className="group-hover:underline">Portfolio</span>
               </a>
               <a 
                 href="https://github.com/immusawer" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <Github className="h-5 w-5" />
+                <Github className="h-5 w-5 hover:scale-110 transition-transform" />
               </a>
               <a 
                 href="https://www.linkedin.com/in/abdul-musawer-dinzad-49a5a41ba/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <Linkedin className="h-5 w-5" />
+                <Linkedin className="h-5 w-5 hover:scale-110 transition-transform" />
               </a>
             </div>
           </div>
         </div>
       </footer>
+      
+      {/* Add these animations to your global CSS */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Custom scrollbar for tab list */
+        .scrollbar-thin::-webkit-scrollbar {
+          height: 6px;
+        }
+        
+        .scrollbar-thumb-blue-200::-webkit-scrollbar-thumb {
+          background-color: rgba(191, 219, 254, 0.5);
+          border-radius: 3px;
+        }
+        
+        .dark .scrollbar-thumb-slate-700::-webkit-scrollbar-thumb {
+          background-color: rgba(51, 65, 85, 0.5);
+        }
+        
+        .scrollbar-track-transparent::-webkit-scrollbar-track {
+          background-color: transparent;
+        }
+      `}</style>
     </div>
   );
 }
