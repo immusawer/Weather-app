@@ -8,8 +8,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { MapPin, RefreshCw, Compass, Globe } from 'lucide-react';
+import { MapPin, RefreshCw, Compass, Globe, Github, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 // Define proper types for weather data and locations
 interface WeatherData {
@@ -182,76 +183,129 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 pb-10">
-      <div className="container mx-auto px-4 py-8">
-        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
-          <div className="flex items-center gap-3">
-            <Globe className="h-8 w-8 text-blue-500" />
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Weather Forecast</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleRefresh}
-              className="rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-              aria-label="Refresh weather data"
-            >
-              <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </Button>
-            <AddLocationDialog onAdd={handleAddLocation} />
-          </div>
-        </header>
-
-        <Tabs 
-          defaultValue="current" 
-          value={activeLocation}
-          onValueChange={(value) => setActiveLocation(value)}
-          className="space-y-6"
-        >
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="bg-card border p-1 rounded-full flex-nowrap justify-start min-w-max">
-              <TabsTrigger value="current" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <Compass className="h-4 w-4 mr-2" />
-                Current Location
-              </TabsTrigger>
-              {locations.map((loc) => (
-                <TabsTrigger 
-                  key={loc.id} 
-                  value={loc.id} 
-                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {loc.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-
-          <TabsContent value="current" className="mt-6">
-            {geoLoading || isLoading ? (
-              <div className="flex justify-center py-12">
-                <RefreshCw className="h-12 w-12 animate-spin text-blue-500" />
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-slate-950 dark:to-slate-900 flex flex-col">
+      <div className="container mx-auto px-4 py-6 flex-grow">
+        <Card className="shadow-lg rounded-2xl overflow-hidden border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm mb-8">
+          <header className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 dark:bg-blue-500 p-2 rounded-full">
+                <Globe className="h-7 w-7 text-white" />
               </div>
-            ) : (
-              <WeatherDisplay weatherData={weatherData} isLoading={isLoading} />
-            )}
-          </TabsContent>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                Weather Forecast
+              </h1>
+            </div>
+            <div className="flex items-center gap-3 mt-4 sm:mt-0">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleRefresh}
+                className="rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                aria-label="Refresh weather data"
+              >
+                <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </Button>
+              <AddLocationDialog onAdd={handleAddLocation} />
+            </div>
+          </header>
 
-          {locations.map((loc) => (
-            <TabsContent key={loc.id} value={loc.id} className="mt-6">
-              {!locationWeather[loc.id] ? (
-                <div className="flex justify-center py-12">
-                  <RefreshCw className="h-12 w-12 animate-spin text-blue-500" />
-                </div>
-              ) : (
-                <WeatherDisplay weatherData={locationWeather[loc.id]} isLoading={false} />
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+          <div className="p-6">
+            <Tabs 
+              defaultValue="current" 
+              value={activeLocation}
+              onValueChange={(value) => setActiveLocation(value)}
+              className="space-y-6"
+            >
+              <div className="overflow-x-auto pb-2">
+                <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full flex-nowrap justify-start min-w-max">
+                  <TabsTrigger 
+                    value="current" 
+                    className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                  >
+                    <Compass className="h-4 w-4 mr-2" />
+                    Current Location
+                  </TabsTrigger>
+                  {locations.map((loc) => (
+                    <TabsTrigger 
+                      key={loc.id} 
+                      value={loc.id} 
+                      className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      {loc.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              <TabsContent value="current" className="mt-6">
+                {geoLoading || isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <RefreshCw className="h-12 w-12 animate-spin text-blue-500 mb-4" />
+                    <p className="text-slate-600 dark:text-slate-400">Loading weather data...</p>
+                  </div>
+                ) : (
+                  <WeatherDisplay weatherData={weatherData} isLoading={isLoading} />
+                )}
+              </TabsContent>
+
+              {locations.map((loc) => (
+                <TabsContent key={loc.id} value={loc.id} className="mt-6">
+                  {!locationWeather[loc.id] ? (
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <RefreshCw className="h-12 w-12 animate-spin text-blue-500 mb-4" />
+                      <p className="text-slate-600 dark:text-slate-400">Loading weather data for {loc.name}...</p>
+                    </div>
+                  ) : (
+                    <WeatherDisplay weatherData={locationWeather[loc.id]} isLoading={false} />
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </Card>
       </div>
+      
+      {/* Footer with your name and profile */}
+      <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="mb-4 sm:mb-0">
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
+                © {new Date().getFullYear()} Designed & Developed by Abdul Musawer Dinzad
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://musawer-cv.vercel.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-2"
+              >
+                <Globe className="h-4 w-4" />
+                <span>Portfolio</span>
+              </a>
+              <a 
+                href="https://github.com/immusawer" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/in/abdul-musawer-dinzad-49a5a41ba/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
